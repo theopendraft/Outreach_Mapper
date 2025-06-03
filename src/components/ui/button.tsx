@@ -12,7 +12,7 @@ export const Button = ({ className = "", variant = "default", ...props }: Button
 
   return (
     <button
-      className={`px-4 py-2 rounded-md transition ${variantClass} ${className}`}
+      className={`px-2 py-1 rounded-md transition ${variantClass} ${className}`}
       {...props}
     />
   );

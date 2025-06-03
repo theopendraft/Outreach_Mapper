@@ -64,9 +64,9 @@ export default function Map() {
   return (
     <>
       <MapContainer
-        center={[22.5726, 80.8244]}
-        zoom={13}
-        style={{ height: "100vh", width: "100%" }}
+        center={[ 22.68411, 77.26887]}
+        zoom={11}
+        className="h-screen w-full" // Use Tailwind for full viewport height/width
       >
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'

@@ -30,7 +30,7 @@ export default function Dashboard({
   stats,
 }: Props) {
   return (
-    <div className="w-full md:w-80 p-4 bg-white border-r shadow-md space-y-6 h-screen overflow-y-auto">
+    <div className="w-full max-w-full md:max-w-xs md:w-80 p-4 bg-white border-r shadow-md space-y-6 h-auto md:h-screen overflow-y-auto">
       <h2 className="text-xl font-semibold">Village Tracker Dashboard</h2>
 
       {/* 📊 Stats */}
@@ -55,33 +55,33 @@ export default function Dashboard({
       </div>
 
       {/* ✅ Filters */}
-      <div className="space-y-2">
-        <h4 className="font-medium">Filter by Status</h4>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            checked={filters.visited}
-            onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, visited: !!val })}
-          />
-          <Label>Visited</Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            checked={filters.planned}
-            onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, planned: !!val })}
-          />
-          <Label>Planned</Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            checked={filters.notVisited}
-            onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, notVisited: !!val })}
-          />
-          <Label>Not Visited</Label>
+      <div>
+        <h4 className="font-medium mb-2">Filter by Status</h4>
+        <div className="flex flex-row items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              checked={filters.visited}
+              onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, visited: !!val })}
+            />
+            <Label>Visited</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              checked={filters.planned}
+              onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, planned: !!val })}
+            />
+            <Label>Planned</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              checked={filters.notVisited}
+              onCheckedChange={(val: boolean | "indeterminate") => setFilters({ ...filters, notVisited: !!val })}
+            />
+            <Label>Not Visited</Label>
+          </div>
         </div>
       </div>
+      
     </div>
   );
 }

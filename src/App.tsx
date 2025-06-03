@@ -1,3 +1,5 @@
+import './index.css';
+
 // File: src/App.tsx
 import React, { useState } from "react";
 import Map from "./components/Map";
@@ -26,9 +28,9 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col md:flex-row h-screen">
       {/* Left Panel */}
-      <div className="w-[320px] border-r p-4 space-y-4 bg-white overflow-y-auto">
+      <div className="w-full md:w-[20rem] lg:w-[22rem] border-r p-4 space-y-4 bg-white overflow-y-auto">
         <h2 className="text-xl font-bold">📍 Village Dashboard</h2>
 
         {/* Stats */}

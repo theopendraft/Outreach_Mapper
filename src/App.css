@@ -46,3 +46,7 @@
   z-index: 1; /* Lower than modal */
 }
 
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
