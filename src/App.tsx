@@ -1,4 +1,3 @@
-
 import './index.css';
 
 // File: src/App.tsx
@@ -9,6 +8,7 @@ import type { Village } from "./components/Map";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
+import UploadVillageData from "./components/UploadVillageData";
 
 export default function App() {
   const allVillages: Village[] = villagesData as Village[];
@@ -30,6 +30,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col md:flex-row h-screen">
+
       {/* Left Panel */}
       <div className="w-full md:w-[20rem] lg:w-[22rem] border-r p-4 space-y-4 bg-white overflow-y-auto">
         <h2 className="text-xl font-bold">📍 Village Dashboard</h2>

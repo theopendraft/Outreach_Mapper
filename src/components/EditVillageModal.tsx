@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { Village, Parent } from "./Map";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../lib/firebase"; // adjust path if needed
 
 function isValidPhoneNumber(phone: string) {
   const phoneDigits = phone.replace(/\D/g, "");
@@ -97,7 +99,7 @@ export function EditVillageModal({
     setParents(parents.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ villageName: true, status: true });
 
@@ -107,8 +109,8 @@ export function EditVillageModal({
       (p) => p.name.trim() !== "" || p.contact.trim() !== ""
     );
 
-    onSave({
-      ...village,
+    await setDoc(doc(db, "villages", village.id.toString()), {
+      ...village, // spread updated values
       name: villageName.trim(),
       status,
       notes,

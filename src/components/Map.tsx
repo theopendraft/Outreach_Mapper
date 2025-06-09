@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from "react-leaflet";
 import L from "leaflet";
-import villagesData from "../data/villages.json";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
 import { EditVillageModal } from "./EditVillageModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -55,10 +56,10 @@ export default function Map() {
       try {
         setVillages(JSON.parse(storedVillages) as Village[]);
       } catch (e) {
-        setVillages(villagesData as Village[]);
+        setVillages([]);
       }
     } else {
-      setVillages(villagesData as Village[]);
+      setVillages([]);
     }
   }, []);
 
@@ -70,6 +71,18 @@ export default function Map() {
       console.error("Failed to save villages to localStorage:", e);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "villages"), (snapshot) => {
+      const villages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setVillages(villages as Village[]);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleEditClick = (village: Village) => {
     console.log("Edit button clicked for village:", village.name);

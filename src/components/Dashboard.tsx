@@ -1,34 +1,61 @@
 // src/components/Dashboard.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-type Props = {
-  filters: {
-    visited: boolean;
-    planned: boolean;
-    notVisited: boolean;
-  };
-  setFilters: (filters: Props["filters"]) => void;
-  search: string;
-  setSearch: (search: string) => void;
-  stats: {
-    total: number;
-    visited: number;
-    planned: number;
-    notVisited: number;
-  };
+type Village = {
+  id: string;
+  name: string;
+  tehsil: string;
+  coords: [number, number];
+  population: number;
+  status: "visited" | "planned" | "not-visited";
+  lastInteraction?: string;
+  nextVisitTarget?: string;
+  notes?: string;
+  parents: { name: string; contact: string }[];
 };
 
-export default function Dashboard({
-  filters,
-  setFilters,
-  search,
-  setSearch,
-  stats,
-}: Props) {
+export default function Dashboard() {
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState({
+    visited: true,
+    planned: true,
+    notVisited: true,
+  });
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "villages"), (snapshot) => {
+      const villages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Village[];
+      setVillages(villages);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const filteredVillages = villages.filter((village) => {
+    const matchesSearch = village.name.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter =
+      (filters.visited && village.status === "visited") ||
+      (filters.planned && village.status === "planned") ||
+      (filters.notVisited && village.status === "not-visited");
+    return matchesSearch && matchesFilter;
+  });
+
+  const stats = {
+    total: villages.length,
+    visited: villages.filter((v) => v.status === "visited").length,
+    planned: villages.filter((v) => v.status === "planned").length,
+    notVisited: villages.filter((v) => v.status === "not-visited").length,
+  };
+
   return (
     <div className="w-full max-w-full md:max-w-xs md:w-80 p-4 bg-white border-r shadow-md space-y-6 h-auto md:h-screen overflow-y-auto">
       <h2 className="text-xl font-semibold">Village Tracker Dashboard</h2>
