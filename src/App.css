@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -53,5 +52,5 @@ body.modal-open {
 }
 
 .cursor-pin {
-  cursor: crosshair;
+  cursor: url("/assets/map_pin.png") 12 41, pointer;
 }

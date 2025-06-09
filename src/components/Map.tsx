@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from "react-leafl
 import L from "leaflet";
 import villagesData from "../data/villages.json";
 import { EditVillageModal } from "./EditVillageModal";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Types
 export type Parent = {
@@ -88,12 +90,25 @@ export default function Map() {
     if (addingVillage) {
       setAddingVillage(false);
       setNewVillageCoords(null);
+      toast.success("Village added successfully");
+    } else {
+      toast.success("Village updated successfully");
     }
   };
 
   const handleModalClose = () => {
     console.log("Modal closed");
     setEditingVillage(null);
+  };
+
+  const handleDeleteVillage = (villageId: string | number) => {
+    setVillages((prev) => {
+      const updatedVillages = prev.filter((v) => v.id !== villageId);
+      saveVillagesToLocalStorage(updatedVillages);
+      return updatedVillages;
+    });
+    setSelectedVillage(null);
+    toast.success("Village deleted successfully");
   };
 
   return (
@@ -161,6 +176,16 @@ export default function Map() {
                   >
                     Edit Village
                   </button>
+                  <button
+                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this village?")) {
+                        handleDeleteVillage(village.id);
+                      }
+                    }}
+                  >
+                    Delete Village
+                  </button>
                 </div>
               </Popup>
             )}
@@ -192,13 +217,19 @@ export default function Map() {
             setNewVillageCoords(null);
           }}
           onSave={(newVillage) => {
-            setVillages((prev) => [...prev, newVillage]);
+            setVillages((prev) => {
+              const updatedVillages = [...prev, newVillage];
+              saveVillagesToLocalStorage(updatedVillages);
+              return updatedVillages;
+            });
             setAddingVillage(false);
             setNewVillageCoords(null);
+            toast.success("Village added successfully");
           }}
         />
       )}
-    </>
+      <ToastContainer position="top-center" autoClose={2000} />
+     </> 
   );
 }
 

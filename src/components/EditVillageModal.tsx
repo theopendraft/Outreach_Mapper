@@ -32,13 +32,11 @@ export function EditVillageModal({
   }, []);
 
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [onClose]);
 
   const onOverlayClick = (e: React.MouseEvent) => {
@@ -124,7 +122,7 @@ export function EditVillageModal({
   return ReactDOM.createPortal(
     <div
       ref={modalRef}
-      onClick={onOverlayClick}
+      onClick={onOverlayClick} // overlay click closes modal
       className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center"
       aria-modal="true"
       role="dialog"
