@@ -6,6 +6,7 @@ import { db } from "../lib/firebase";
 import { EditVillageModal } from "./EditVillageModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FiPlus } from "react-icons/fi";
 
 // Types
 export type Parent = {
@@ -109,10 +110,16 @@ export default function Map({ villages, search, filter }: Props) {
   return (
     <>
       <button
-        className="fixed top-4 right-4 z-[1000] px-4 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700"
+        className="fixed bottom-6 right-6 z-[1000] flex items-center bg-green-600 text-white rounded-full shadow-lg px-4 py-4 transition-all duration-300 group hover:pr-8 hover:rounded-2"
         onClick={() => setAddingVillage(true)}
+        style={{ minWidth: 56, minHeight: 56 }}
       >
-        + Add New Village
+        <span className="flex items-center justify-center w-6 h-6 text-2xl transition-all duration-300">
+          <FiPlus />
+        </span>
+        <span className="overflow-hidden max-w-0 group-hover:max-w-xs group-hover:ml-3 transition-all duration-300 whitespace-nowrap">
+          Add New Village
+        </span>
       </button>
       <MapContainer
         center={[22.68411, 77.26887]}
