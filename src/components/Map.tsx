@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from "react-leaflet";
 import L from "leaflet";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { EditVillageModal } from "./EditVillageModal";
 import { ToastContainer, toast } from "react-toastify";
@@ -42,87 +42,69 @@ function createIcon(status: string) {
 
 const LOCAL_STORAGE_KEY = "village-tracker-villages";
 
-export default function Map() {
+interface Props {
+  villages: Village[];
+  search: string;
+  filter: 'all' | 'visited' | 'planned' | 'not-visited';
+}
+
+export default function Map({ villages, search, filter }: Props) {
   const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
-  const [villages, setVillages] = useState<Village[]>([]);
   const [editingVillage, setEditingVillage] = useState<Village | null>(null);
   const [addingVillage, setAddingVillage] = useState(false);
   const [newVillageCoords, setNewVillageCoords] = useState<[number, number] | null>(null);
+  const [villagesState, setVillagesState] = useState<Village[]>([]);
 
-  // Load from localStorage or fallback to JSON
-  useEffect(() => {
-    const storedVillages = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (storedVillages) {
-      try {
-        setVillages(JSON.parse(storedVillages) as Village[]);
-      } catch (e) {
-        setVillages([]);
-      }
-    } else {
-      setVillages([]);
-    }
-  }, []);
-
-  // Save to localStorage utility
-  const saveVillagesToLocalStorage = (villagesToSave: Village[]) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(villagesToSave));
-    } catch (e) {
-      console.error("Failed to save villages to localStorage:", e);
-    }
-  };
-
+  // Firestore live sync
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "villages"), (snapshot) => {
       const villages = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setVillages(villages as Village[]);
+      setVillagesState(villages as Village[]);
     });
 
     return () => unsubscribe();
   }, []);
 
+  // Filter villages for display
+  const displayVillages = villagesState.filter(v => {
+    const matchSearch = v.name.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === 'all' || v.status === filter;
+    return matchSearch && matchFilter;
+  });
+
   const handleEditClick = (village: Village) => {
-    console.log("Edit button clicked for village:", village.name);
     setEditingVillage(village);
   };
 
   // Save handler for add/edit
-  const handleSaveVillage = (updatedVillage: Village) => {
-    setVillages((prev) => {
-      const updatedVillages = prev.some((v) => v.id === updatedVillage.id)
-        ? prev.map((v) => (v.id === updatedVillage.id ? updatedVillage : v))
-        : [...prev, updatedVillage];
-      saveVillagesToLocalStorage(updatedVillages);
-      return updatedVillages;
-    });
-    setSelectedVillage(updatedVillage);
+  const handleSaveVillage = async (updatedVillage: Village) => {
+    await setDoc(doc(db, "villages", updatedVillage.id.toString()), updatedVillage);
     setEditingVillage(null);
-    if (addingVillage) {
-      setAddingVillage(false);
-      setNewVillageCoords(null);
-      toast.success("Village added successfully");
-    } else {
-      toast.success("Village updated successfully");
-    }
+    setSelectedVillage(updatedVillage);
+    toast.success("Village updated successfully");
   };
 
   const handleModalClose = () => {
-    console.log("Modal closed");
     setEditingVillage(null);
   };
 
-  const handleDeleteVillage = (villageId: string | number) => {
-    setVillages((prev) => {
-      const updatedVillages = prev.filter((v) => v.id !== villageId);
-      saveVillagesToLocalStorage(updatedVillages);
-      return updatedVillages;
-    });
+  // Delete from Firestore
+  const handleDeleteVillage = async (villageId: string | number) => {
+    await deleteDoc(doc(db, "villages", villageId.toString()));
     setSelectedVillage(null);
     toast.success("Village deleted successfully");
   };
+
+  // Component to handle map click for adding a new village
+  function AddVillageOnMap({ onSelect }: { onSelect: (coords: [number, number]) => void }) {
+    useMapEvent("click", (e) => {
+      onSelect([e.latlng.lat, e.latlng.lng]);
+    });
+    return null;
+  }
 
   return (
     <>
@@ -151,7 +133,7 @@ export default function Map() {
           <AddVillageOnMap onSelect={setNewVillageCoords} />
         )}
 
-        {villages.map((village) => (
+        {displayVillages.map((village) => (
           <Marker
             key={village.id}
             position={village.coords}
@@ -221,7 +203,7 @@ export default function Map() {
             tehsil: "",
             coords: newVillageCoords,
             population: 0,
-            status: "",
+            status: "not-visited",
             parents: [],
             notes: "",
           }}
@@ -229,12 +211,8 @@ export default function Map() {
             setAddingVillage(false);
             setNewVillageCoords(null);
           }}
-          onSave={(newVillage) => {
-            setVillages((prev) => {
-              const updatedVillages = [...prev, newVillage];
-              saveVillagesToLocalStorage(updatedVillages);
-              return updatedVillages;
-            });
+          onSave={async (newVillage) => {
+            await setDoc(doc(db, "villages", newVillage.id.toString()), newVillage);
             setAddingVillage(false);
             setNewVillageCoords(null);
             toast.success("Village added successfully");
@@ -242,14 +220,8 @@ export default function Map() {
         />
       )}
       <ToastContainer position="top-center" autoClose={2000} />
-     </> 
+    </>
   );
 }
 
-function AddVillageOnMap({ onSelect }: { onSelect: (coords: [number, number]) => void }) {
-  useMapEvent("click", (e) => {
-    onSelect([e.latlng.lat, e.latlng.lng]);
-  });
-  return null;
-}
 

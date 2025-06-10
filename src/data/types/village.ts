@@ -1,5 +1,5 @@
-// data/types/village.ts
-export type VillageStatus = 'visited' | 'not_visited' | 'planned';
+export type VillageStatus = 'visited' | 'not-visited' | 'planned';
+import type { Parent } from "@/components/Map";
 
 export interface Village {
   id: string;
@@ -13,4 +13,9 @@ export interface Village {
   parentsName?: string;
   parentsContact?: string;
   interactionHistory?: string;
-} 
+  nextVisitTarget?: string;
+  notes?: string;
+  tehsil?: string;
+  population?: number;
+  parents?: Parent[];
+}

@@ -110,7 +110,7 @@ export function EditVillageModal({
     );
 
     await setDoc(doc(db, "villages", village.id.toString()), {
-      ...village, // spread updated values
+      ...village,
       name: villageName.trim(),
       status,
       notes,
