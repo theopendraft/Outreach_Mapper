@@ -1,7 +1,8 @@
 import * as React from "react";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "outline" | "default";
+  variant?: "outline" | "default" | "primary" | "secondary";
+  size?: string;
 };
 
 export const Button = ({ className = "", variant = "default", ...props }: ButtonProps) => {
