@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { FiSearch, FiX, FiDownload, FiPlus, FiChevronRight, FiChevronLeft, FiMenu } from "react-icons/fi";
+import { TfiMenuAlt } from "react-icons/tfi";
+
 
 type Props = {
   search: string;
@@ -119,6 +121,25 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
     setIsOpen(!isOpen);
   };
 
+  // Close panel on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
     <aside
       ref={panelRef}
@@ -126,48 +147,42 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
         bg-white
         border rounded-2xl
         shadow-md
-        p-5
         flex
         flex-col
         gap-6
         overflow-y-auto
-        h-screen
-        sticky top-4
-        z-30
         transition-all
-        duration-300
-        ${isOpen ? 'w-full md:w-[360px]' : 'w-16 overflow-hidden'}
+        duration-350
+        ease-in-out
+        fixed top-16 right-6
+        z-[9999]
+        ${isOpen ? 'p-5 h-[80vh] w-12 md:w-[360px]' : 'h-14 w-14 items-center justify-center p-0'}
       `}
       style={{
-        minWidth: isOpen ? '220px' : '4rem',
-        maxWidth: '600px',
+        minWidth: isOpen ? '220px' : '3.5rem',
+        maxWidth: isOpen ? '600px' : '3.5rem',
+        minHeight: isOpen ? '300px' : '3.5rem',
         userSelect: isResizing.current ? 'none' : 'auto',
+        display: 'flex',
       }}
       aria-label="Map summary panel"
     >
       {/* Toggle Button */}
       <button
-        className="absolute top-5 right-5 p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+        className={`transition-colors absolute ${isOpen ? 'top-6 right-5' : 'inset-0 m-auto'}`}
         onClick={togglePanel}
+        // onMouseEnter={() => { if (!isOpen) setIsOpen(true); }}
         aria-label={isOpen ? "Close Summary Panel" : "Open Summary Panel"}
+        style={!isOpen ? { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000 } : {}}
       >
-        <FiMenu size={20} />
+        <TfiMenuAlt size={22} />
       </button>
 
       {isOpen && (
         <>
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-gray-900 tracking-tight select-none">Map Summary</h2>
-            <Button
-              variant="outline"
-              className="md:hidden"
-              onClick={onAddVillage}
-              title="Add Village"
-              aria-label="Add Village"
-            >
-              <FiPlus />
-            </Button>
+            <h2 className="text-[15pt] font-semibold text-gray-900 tracking-tight select-none">Map Summary</h2>
           </div>
 
           {/* Search */}
@@ -201,7 +216,7 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
           </div>
 
           {/* Status Filter & Stats Combined */}
-          <div className="flex flex-wrap gap-3" role="group" aria-label="Filter villages by status">
+          <div className="grid grid-cols-2 gap-3 w-full" role="group" aria-label="Filter villages by status">
             {[
               { label: "All", value: "all", color: "bg-gray-200 text-gray-700", count: stats.total },
               { label: "Visited", value: "visited", color: "bg-green-100 text-green-700", count: stats.visited },
@@ -211,25 +226,23 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
               <button
                 key={opt.value}
                 className={`
-                  flex items-center gap-2 px-4 py-1 rounded-full text-sm font-semibold transition select-none
-                  focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+                  flex flex-row items-center justify-between p-3
+                  hover:border-blue-400
+                  min-h-[48px] rounded-xl
+                  text-sm font-semibold transition
+                  focus:outline-none focus:ring-2 focus:ring-blue-400
                   ${filter === opt.value
-                    ? `${opt.color} ring-2 ring-blue-400 shadow-sm`
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"}
+                    ? `${opt.color} ring-2 ring-blue-400 shadow`
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 "}
                 `}
                 onClick={() => setFilter(opt.value as any)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setFilter(opt.value as any);
-                  }
-                }}
-                tabIndex={0}
                 aria-pressed={filter === opt.value}
                 type="button"
               >
-                {opt.label}
-                <span className="ml-1 bg-white/70 text-xs px-2 py-0.5 rounded-full border border-gray-200">{opt.count}</span>
+                <span>{opt.label}</span>
+                <span className="mt-1 inline-block bg-white/80 text-xs px-2 py-0.5 rounded-full border border-gray-200 font-normal">
+                  {opt.count}
+                </span>
               </button>
             ))}
           </div>
