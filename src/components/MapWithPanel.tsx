@@ -20,6 +20,7 @@ export default function MapWithPanel() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'visited' | 'planned' | 'not-visited'>('all');
   const [villages, setVillages] = useState<Village[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'villages'), (snapshot) => {
@@ -48,7 +49,14 @@ export default function MapWithPanel() {
 
   return (
     <div className="flex h-screen">
-      <MapSummaryPanel search={search} setSearch={setSearch} filter={filter} setFilter={setFilter} />
+      <MapSummaryPanel
+        search={search}
+        setSearch={setSearch}
+        filter={filter}
+        setFilter={setFilter}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+      />
       <div className="flex-1">
         <Map villages={villages} search={search} filter={filter} />
       </div>

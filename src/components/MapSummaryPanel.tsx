@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { FiSearch, FiX, FiDownload, FiPlus, FiChevronRight, FiChevronLeft, FiMenu } from "react-icons/fi";
 import { TfiMenuAlt } from "react-icons/tfi";
+import { useLocation } from "react-router-dom";
 
 
 type Props = {
@@ -15,13 +16,15 @@ type Props = {
   filter: 'all' | 'visited' | 'planned' | 'not-visited';
   setFilter: React.Dispatch<React.SetStateAction<'all' | 'visited' | 'planned' | 'not-visited'>>;
   onAddVillage?: () => void;
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage }: Props) {
+export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage, isOpen, setIsOpen }: Props) {
   const [villages, setVillages] = useState<Village[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(true); // State to manage panel open/close
+  const [panelOpen, setPanelOpen] = useState(isOpen); // Local state for panel open/close
 
   // Width resize state & refs
   const panelRef = useRef<HTMLDivElement>(null);
@@ -29,6 +32,8 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
   const isResizing = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  const location = useLocation();
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'villages'), (snap) => {
@@ -41,6 +46,13 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
       setLoading(false);
     };
   }, []);
+
+  // Close summary panel when navigating to /map
+  useEffect(() => {
+    if (location.pathname === "/map") {
+      setPanelOpen(false);
+    }
+  }, [location.pathname]);
 
   // Resize handlers
   useEffect(() => {
@@ -118,19 +130,21 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
   }
 
   const togglePanel = () => {
-    setIsOpen(!isOpen);
+    setPanelOpen(!panelOpen);
+    setIsOpen(!panelOpen); // Also update the parent state
   };
 
   // Close panel on outside click
   useEffect(() => {
-    if (!isOpen) return;
+    if (!panelOpen) return;
 
     function handleClickOutside(event: MouseEvent) {
       if (
         panelRef.current &&
         !panelRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        setPanelOpen(false);
+        setIsOpen(false); // Close the panel in the parent component as well
       }
     }
 
@@ -138,7 +152,7 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [panelOpen]);
 
   return (
     <aside
@@ -152,33 +166,34 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
         gap-6
         overflow-y-auto
         transition-all
-        duration-350
+        duration-450
         ease-in-out
-        fixed top-16 right-6
+        fixed top-16 right-3
         z-[9999]
-        ${isOpen ? 'p-5 h-[80vh] w-12 md:w-[360px]' : 'h-14 w-14 items-center justify-center p-0'}
+        ${panelOpen ? 'p-5 h-[80vh] w-12 md:w-[360px]' : 'h-14 w-14 items-center justify-center p-0'}
       `}
       style={{
-        minWidth: isOpen ? '220px' : '3.5rem',
-        maxWidth: isOpen ? '600px' : '3.5rem',
-        minHeight: isOpen ? '300px' : '3.5rem',
+        minWidth: panelOpen ? '220px' : '3.5rem',
+        maxWidth: panelOpen ? '600px' : '3.5rem',
+        minHeight: panelOpen ? '300px' : '3.5rem',
         userSelect: isResizing.current ? 'none' : 'auto',
         display: 'flex',
+        
       }}
       aria-label="Map summary panel"
     >
       {/* Toggle Button */}
       <button
-        className={`transition-colors absolute ${isOpen ? 'top-6 right-5' : 'inset-0 m-auto'}`}
+        className={`transition-colors absolute ${panelOpen ? 'top-6 right-5' : 'inset-0 m-auto'}`}
         onClick={togglePanel}
         // onMouseEnter={() => { if (!isOpen) setIsOpen(true); }}
-        aria-label={isOpen ? "Close Summary Panel" : "Open Summary Panel"}
-        style={!isOpen ? { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000 } : {}}
+        aria-label={panelOpen ? "Close Summary Panel" : "Open Summary Panel"}
+        style={!panelOpen ? { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10000 } : {}}
       >
         <TfiMenuAlt size={22} />
       </button>
 
-      {isOpen && (
+      {panelOpen && (
         <>
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -248,8 +263,8 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
-            <Button
+          <div className="flex gap-2 mt-2 items-center justify-between">
+            {/* <Button
               className="flex-1 flex items-center justify-center gap-2"
               onClick={onAddVillage}
               variant="default"
@@ -257,7 +272,7 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
               type="button"
             >
               <FiPlus /> Add Village
-            </Button>
+            </Button> */}
             <Button
               className="flex-1 flex items-center justify-center gap-2"
               variant="outline"
@@ -270,7 +285,7 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
           </div>
 
           {/* Filtered List Preview */}
-          <div className="mt-4 flex flex-col flex-1 min-h-0">
+          <div className="mt-2 flex flex-col flex-1 min-h-0">
             <div className="text-xs text-gray-500 mb-1 select-none">
               Showing <span className="font-semibold">{filteredVillages.length}</span> of <span className="font-semibold">{villages.length}</span> villages
             </div>
@@ -332,7 +347,7 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
       )}
 
       {/* Drag Resizer */}
-      {isOpen && (
+      {panelOpen && (
         <div
           ref={resizerRef}
           onMouseDown={onMouseDown}

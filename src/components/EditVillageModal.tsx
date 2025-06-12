@@ -124,8 +124,8 @@ export function EditVillageModal({
   return ReactDOM.createPortal(
     <div
       ref={modalRef}
-      onClick={onOverlayClick} // overlay click closes modal
-      className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center"
+      onClick={onOverlayClick}
+      className="fixed inset-0 bg-black bg-opacity-50 z-[99999] flex items-center justify-center"
       aria-modal="true"
       role="dialog"
       aria-labelledby="modal-title"

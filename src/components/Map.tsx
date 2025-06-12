@@ -1,3 +1,4 @@
+// src/components/Map.tsx
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent } from "react-leaflet";
 import L from "leaflet";
@@ -6,7 +7,7 @@ import { db } from "../lib/firebase";
 import { EditVillageModal } from "./EditVillageModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiCheckCircle } from "react-icons/fi";
 
 // Types
 export type Parent = {
@@ -40,8 +41,6 @@ function createIcon(status: string) {
     iconAnchor: [12, 41],
   });
 }
-
-const LOCAL_STORAGE_KEY = "village-tracker-villages";
 
 interface Props {
   villages: Village[];
@@ -78,6 +77,7 @@ export default function Map({ villages, search, filter }: Props) {
 
   const handleEditClick = (village: Village) => {
     setEditingVillage(village);
+    setSelectedVillage(null); // Clear selected village when editing
   };
 
   // Save handler for add/edit
@@ -102,17 +102,21 @@ export default function Map({ villages, search, filter }: Props) {
   // Component to handle map click for adding a new village
   function AddVillageOnMap({ onSelect }: { onSelect: (coords: [number, number]) => void }) {
     useMapEvent("click", (e) => {
-      onSelect([e.latlng.lat, e.latlng.lng]);
+      if (addingVillage) {
+        onSelect([e.latlng.lat, e.latlng.lng]);
+      }
     });
     return null;
   }
 
   return (
-    
     <>
       <button
-        className="fixed bottom-6 right-6 z-[1000] flex items-center bg-green-600 text-white rounded-full shadow-lg px-4 py-4 transition-all duration-300 group hover:pr-8 hover:rounded-2"
-        onClick={() => setAddingVillage(true)}
+        className="fixed bottom-20 md:bottom-6 right-3 z-[1000] flex items-center bg-green-600 text-white rounded-2xl shadow-lg px-4 py-4 transition-all duration-300 group hover:pr-8 hover:rounded-2"
+        onClick={() => {
+          setAddingVillage(true);
+          setNewVillageCoords(null);
+        }}
         style={{ minWidth: 56, minHeight: 56 }}
       >
         <span className="flex items-center justify-center w-6 h-6 text-2xl transition-all duration-300">
@@ -147,7 +151,10 @@ export default function Map({ villages, search, filter }: Props) {
             position={village.coords}
             icon={createIcon(village.status)}
             eventHandlers={{
-              click: () => setSelectedVillage(village),
+              click: () => {
+                setSelectedVillage(village);
+                setEditingVillage(null); // Clear editing state when selecting a village
+              },
             }}
           >
             {selectedVillage && selectedVillage.id === village.id && (
@@ -223,13 +230,19 @@ export default function Map({ villages, search, filter }: Props) {
             await setDoc(doc(db, "villages", newVillage.id.toString()), newVillage);
             setAddingVillage(false);
             setNewVillageCoords(null);
-            toast.success("Village added successfully");
+            // toast.success("Village added successfully"); // Removed toast
           }}
         />
       )}
-      <ToastContainer position="top-center" autoClose={2000} />
-    </>
+      {/* <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        icon={<FiCheckCircle className="text-green-500 w-6 h-6" />}
+        toastClassName={() =>
+          "flex items-center gap-2 rounded-lg bg-white/90 shadow-lg border border-green-200 px-4 py-2 min-h-0 text-sm sm:text-base"
+        }
+        style={{ top: "4em", left: "2em", minWidth: 0, width: "auto", maxWidth: "90vw" }}
+      /> */}
+      </>
   );
 }
-
-

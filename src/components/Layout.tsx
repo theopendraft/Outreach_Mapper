@@ -66,7 +66,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
       {/* Main Content (add pt-14 for navbar height spacing) */}
-      <main className="flex-1 w-full pt-14 pb-12">{children}</main>
+      <main className="flex-1 w-full pt-14 pb-0">{children}</main>
       {/* Bottom Nav for Mobile */}
       <nav className="fixed bottom-0 left-0 right-0 z-[99999] bg-white border-t shadow flex sm:hidden justify-around py-2">
         {navLinks.map(({ name, path, Icon }) => (
