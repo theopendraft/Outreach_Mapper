@@ -18,9 +18,11 @@ type Props = {
   onAddVillage?: () => void;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  onGlobalSearchLocation?: (lat: number, lng: number, label: string) => void;
+
 };
 
-export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage, isOpen, setIsOpen }: Props) {
+export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage, isOpen, setIsOpen, onGlobalSearchLocation }: Props) {
   const [villages, setVillages] = useState<Village[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -91,6 +93,42 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
       (filter === 'all' || v.status === filter)
     );
   }, [villages, search, filter]);
+
+  const [notFoundMessage, setNotFoundMessage] = useState<string | null>(null);
+const [searching, setSearching] = useState(false);
+
+useEffect(() => {
+  if (!search || filteredVillages.length > 0) {
+    setNotFoundMessage(null);
+    return;
+  }
+
+  // Perform global search via Nominatim
+  const timeout = setTimeout(async () => {
+    setSearching(true);
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`);
+      const data = await response.json();
+
+      if (data?.length > 0) {
+        const result = data[0];
+        setNotFoundMessage(null);
+        if (onGlobalSearchLocation) {
+          onGlobalSearchLocation(parseFloat(result.lat), parseFloat(result.lon), result.display_name);
+        }
+      } else {
+        setNotFoundMessage("No match found for that village name.");
+      }
+    } catch (err) {
+      setNotFoundMessage("Error reaching location service.");
+    } finally {
+      setSearching(false);
+    }
+  }, 800); // debounce 800ms
+
+  return () => clearTimeout(timeout);
+}, [search]);
+
 
   // Stats
   const stats = useMemo(() => ({
@@ -284,6 +322,14 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
             <div className="text-xs text-gray-500 mb-1 select-none">
               Showing <span className="font-semibold">{filteredVillages.length}</span> of <span className="font-semibold">{villages.length}</span> villages
             </div>
+
+              {searching && (
+  <p className="text-sm text-blue-500 text-center py-2">Searching globally...</p>
+)}
+{notFoundMessage && (
+  <p className="text-sm text-red-500 text-center py-2">{notFoundMessage}</p>
+)}
+
 
             <ul className="overflow-y-auto space-y-3 max-h-full flex-1 min-h-0">
               {loading ? (

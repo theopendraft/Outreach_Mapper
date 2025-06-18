@@ -67,7 +67,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 pt-14 pb-20">{children}</main>
+      <main className="flex-1 ">{children}</main>
 
       {/* Bottom Mobile Navigation */}
       <nav className="fixed bottom-3 left-2 right-2  rounded-full sm:hidden z-50 bg-white border shadow-md flex justify-around py-2 px-3">

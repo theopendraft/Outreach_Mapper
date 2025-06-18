@@ -8,12 +8,8 @@ import { format } from "date-fns";
 import { Village } from "../../data/types/village";
 import { toast } from "react-toastify";
 
-interface InteractionCalendarProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export default function InteractionCalendar({ isOpen, onClose }: InteractionCalendarProps) {
+export default function InteractionCalendar() {
+  const [isOpen, setIsOpen] = useState(false);
   const [villages, setVillages] = useState<Village[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedVillage, setSelectedVillage] = useState<Village | null>(null);
@@ -38,7 +34,7 @@ export default function InteractionCalendar({ isOpen, onClose }: InteractionCale
         calendarRef.current &&
         !calendarRef.current.contains(e.target as Node)
       ) {
-        onClose();
+        setIsOpen(false);
         setSelectedVillage(null);
       }
     };
@@ -46,7 +42,7 @@ export default function InteractionCalendar({ isOpen, onClose }: InteractionCale
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   // 📍 On date click
   const handleDateClick = (date: Date) => {
@@ -78,7 +74,13 @@ export default function InteractionCalendar({ isOpen, onClose }: InteractionCale
   return (
     <>
       {/* 📅 Floating Calendar Button */}
-      {/* Removed button here because open/close is controlled externally */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-40 md:bottom-[86px] right-3 z-50 bg-blue-600 text-white px-4 py-4 rounded-full shadow hover:bg-blue-700"
+        title="Open Calendar"
+      >
+        <FiCalendar className="flex items-center justify-center w-6 h-6 text-2xl" />
+      </button>
 
       {/* 🧩 Calendar Popup */}
       <div
@@ -89,24 +91,16 @@ export default function InteractionCalendar({ isOpen, onClose }: InteractionCale
             : "opacity-0 scale-75 pointer-events-none"
         }`}
         style={{
-          minWidth: isOpen ? "600px" : "3.5rem",
-          maxWidth: isOpen ? "200px" : "3.5rem",
-          minHeight: isOpen ? "360px" : "3.5rem",
-          //userSelect: isResizing.current ? 'none' : 'auto',
-          //display: "flex",
+          width: "90vw",
+          maxWidth: "420px",
         }}
       >
-        <div className="flex justify-between items-center px-4 pt-2">
-          <h2 className="text-base font-semibold text-gray-700">
-            Interaction Calendar
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-red-500"
-          >
+        {/* <div className="flex justify-between items-center px-4 pt-2">
+          <h2 className="text-base font-semibold text-gray-700">Interaction Calendar</h2>
+          <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-red-500">
             <FiX className="w-5 h-5" />
           </button>
-        </div>
+        </div> */}
 
         <div className="p-3">
           <Calendar

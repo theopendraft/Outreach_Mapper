@@ -1,5 +1,5 @@
 // src/components/Map.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent, useMap } from "react-leaflet";
 import L from "leaflet";
 import { collection, onSnapshot, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { FiPlus } from "react-icons/fi";
 import InteractionCalendar from "../../components/calendar/InteractionCalendar";
 import { FiCalendar } from "react-icons/fi";
+import MapSummaryPanel from "../../components/map/MapSummaryPanel";
 
 // Types
 export type Parent = {
@@ -70,9 +71,17 @@ export default function Map({ villages, search, filter }: Props) {
   const [addingVillage, setAddingVillage] = useState(false);
   const [newVillageCoords, setNewVillageCoords] = useState<[number, number] | null>(null);
   const [villagesState, setVillagesState] = useState<Village[]>([]);
-  const [externalSearchMarker, setExternalSearchMarker] = useState<[number, number] | null>(null);
+  // const [externalSearchMarker, setExternalSearchMarker] = useState<[number, number] | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
-  
+  const mapRef = useRef<L.Map | null>(null);
+  const [externalSearchMarker, setExternalSearchMarker] = useState<[number, number] | null>(null);
+  const [externalSearchLabel, setExternalSearchLabel] = useState<string | null>(null);
+
+  const handleGlobalSearchLocation = (lat: number, lng: number, label: string) => {
+    mapRef.current?.setView([lat, lng], 14);
+    setExternalSearchMarker([lat, lng]);
+    setExternalSearchLabel(label);
+  };
 
   // Firestore live sync
   useEffect(() => {
@@ -174,17 +183,27 @@ export default function Map({ villages, search, filter }: Props) {
         <FiCalendar className="flex items-center justify-center w-6 h-6 text-2xl" />
       </button>
 
-      <InteractionCalendar
-        isOpen={showCalendar}
-        onClose={() => setShowCalendar(false)}
+      <InteractionCalendar />
+
+      <MapSummaryPanel
+        search={search}
+        setSearch={() => {}}
+        filter={filter}
+        setFilter={() => {}}
+        isOpen={false}
+        setIsOpen={() => {}}
+        onGlobalSearchLocation={handleGlobalSearchLocation}
       />
 
       {/* <InteractionCalendar isOpen={showCalendar} onClose={() => setShowCalendar(false)} /> */}
 
       <MapContainer
         style={{ height: "100vh", width: "100%", zIndex: 0 }}
-        center={[22.68411, 77.26887]}
-        zoom={11}
+        
+  center={[22.68411, 77.26887]}
+  zoom={11}
+  ref={mapRef}
+
         className="relative z-0"
       >
         <TileLayer
@@ -273,19 +292,12 @@ export default function Map({ villages, search, filter }: Props) {
         ))}
 
         {externalSearchMarker && (
-          <>
-            <Marker
-              position={externalSearchMarker}
-              icon={createIcon("external")}
-            >
-              <Popup>
-                <strong>{search}</strong>
-                <br />
-                Searched globally.
-              </Popup>
-            </Marker>
-            <FlyToMarker coords={externalSearchMarker} />
-          </>
+          <Marker position={externalSearchMarker} icon={createIcon("planned")}>
+            <Popup>
+              <strong>Search Result</strong><br />
+              {externalSearchLabel}
+            </Popup>
+          </Marker>
         )}
       </MapContainer>
 
