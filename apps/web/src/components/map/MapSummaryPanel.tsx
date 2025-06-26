@@ -4,10 +4,11 @@ import { db } from '../../lib/firebase';
 import type { Village } from './Map';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
 import { FiSearch, FiX, FiDownload, FiPlus, FiChevronRight, FiChevronLeft, FiMenu } from "react-icons/fi";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { useLocation } from "react-router-dom";
+
+
 
 
 type Props = {
@@ -18,11 +19,9 @@ type Props = {
   onAddVillage?: () => void;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onGlobalSearchLocation?: (lat: number, lng: number, label: string) => void;
-
 };
 
-export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage, isOpen, setIsOpen, onGlobalSearchLocation }: Props) {
+export default function MapSummaryPanel({ search, setSearch, filter, setFilter, onAddVillage, isOpen, setIsOpen }: Props) {
   const [villages, setVillages] = useState<Village[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -94,42 +93,6 @@ export default function MapSummaryPanel({ search, setSearch, filter, setFilter, 
     );
   }, [villages, search, filter]);
 
-  const [notFoundMessage, setNotFoundMessage] = useState<string | null>(null);
-const [searching, setSearching] = useState(false);
-
-useEffect(() => {
-  if (!search || filteredVillages.length > 0) {
-    setNotFoundMessage(null);
-    return;
-  }
-
-  // Perform global search via Nominatim
-  const timeout = setTimeout(async () => {
-    setSearching(true);
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`);
-      const data = await response.json();
-
-      if (data?.length > 0) {
-        const result = data[0];
-        setNotFoundMessage(null);
-        if (onGlobalSearchLocation) {
-          onGlobalSearchLocation(parseFloat(result.lat), parseFloat(result.lon), result.display_name);
-        }
-      } else {
-        setNotFoundMessage("No match found for that village name.");
-      }
-    } catch (err) {
-      setNotFoundMessage("Error reaching location service.");
-    } finally {
-      setSearching(false);
-    }
-  }, 800); // debounce 800ms
-
-  return () => clearTimeout(timeout);
-}, [search]);
-
-
   // Stats
   const stats = useMemo(() => ({
     total: villages.length,
@@ -194,16 +157,21 @@ useEffect(() => {
 
   return (
     <aside
-    
       ref={panelRef}
       className={`
-        fixed bottom-56 md:bottom-[150px] right-3 bg-white border rounded-full shadow-full transition-all duration-300 ease-in-out
+        bg-white
+        border rounded-2xl
+        shadow-md
         flex
         flex-col
         gap-6
         overflow-y-auto
-        z-[40]
-        ${panelOpen ? 'px-4 py-4 h-[65vh] w-12 md:w-[360px] rounded-xl scale-100 Z' : 'h-14 w-14 items-center justify-center p-0 rounded-2xl opacity-100 scale-100'}
+        transition-all
+        duration-450
+        ease-in-out
+        fixed top-16 right-3
+        z-[9999]
+        ${panelOpen ? 'p-5 h-[80vh] w-12 md:w-[360px]' : 'h-14 w-14 items-center justify-center p-0'}
       `}
       style={{
         minWidth: panelOpen ? '220px' : '3.5rem',
@@ -225,7 +193,7 @@ useEffect(() => {
       >
         <TfiMenuAlt size={22} />
       </button>
-      
+
       {panelOpen && (
         <>
           {/* Header */}
@@ -323,14 +291,6 @@ useEffect(() => {
               Showing <span className="font-semibold">{filteredVillages.length}</span> of <span className="font-semibold">{villages.length}</span> villages
             </div>
 
-              {searching && (
-  <p className="text-sm text-blue-500 text-center py-2">Searching globally...</p>
-)}
-{notFoundMessage && (
-  <p className="text-sm text-red-500 text-center py-2">{notFoundMessage}</p>
-)}
-
-
             <ul className="overflow-y-auto space-y-3 max-h-full flex-1 min-h-0">
               {loading ? (
                 <li className="text-gray-400 text-center py-6 select-none" aria-live="polite" aria-busy="true">Loading villages...</li>
@@ -392,7 +352,7 @@ useEffect(() => {
         <div
           ref={resizerRef}
           onMouseDown={onMouseDown}
-          className="absolute top-0 left-0 h-full w-1 cursor-ew-resize z-40"
+          className="absolute top-0 right-0 h-full w-1 cursor-ew-resize z-40"
           aria-hidden="true"
           title="Drag to resize panel width"
         />
